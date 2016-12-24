@@ -1,39 +1,65 @@
 // @flow
 import _ from 'lodash'
 
-type Schema = {
+type Schemas = {
    [root: string]: {
       __keys: Array<string>
-   } & {[override: string]: any | Schema}
+   } & {[override: string]: any | Schemas}
 }
 
-export default (schema: Schema) => (data: Object, only: string | Array<string>) => {
+type Config = {
+   schemas: Schemas,
+   unions: Array<string>,
+   inferReference: Function
+}
+
+type Union = {
+   id: string,
+   schema: string
+}
+
+type Reference = {
+   id: string,
+   root: string
+}
+
+export default (config: Config) => (data: Object, limiter: string | Array<string>) => {
+   const {schemas, unions, inferReference} = config
 
    /* Given a property name, decide whether or not
     * it contains a relationship to another entity.
     * */
-   const findRoot = (property: string, context: string): ?string => {
-      let root = null
+   const findRelationship = (property: string, currentRoot: string): ?string => {
+      let reference = null
 
       /* First check for overrides on the current
        * schema. The current schema is inferred
-       * from the provided context.
+       * from the provided root.
        * */
-      _.forEach(schema[context], (rootName, override) => {
-         if (override == property) root = rootName
+      _.forEach(schemas[currentRoot], (root, override) => {
+         if (override == property) reference = root
       })
 
-      if (!root) {
-         _.forEach(schema, ({__keys}, rootName: string) => {
+      /* Check to see if the property is a union. If
+       * a match is found, return a pseudo root.
+       * */
+      if (!reference) {
+         _.forEach(unions, union => {
+            if (union == property) reference = union
+         })
+      }
+
+      if (!reference) {
+         _.forEach(schemas, ({__keys}, root: string) => {
             _.forEach(__keys, validKey => {
                if (validKey == property) {
-                  root = rootName
+                  reference = root
                }
             })
          })
       }
 
-      return root
+      return reference
    }
 
    /* Loop over an entities properties and check if any
@@ -44,45 +70,61 @@ export default (schema: Schema) => (data: Object, only: string | Array<string>) 
       const parsedEntity = {...entity}
 
       _.forEach(entity, (value, property) => {
-         const propertyRoot = findRoot(property, root)
+         const relationship = findRelationship(property, root)
 
-         if (propertyRoot) {
+         /* Construct a reference from a value. This is used
+          * to properly understand union relationships.
+          * */
+         const constructReference = (value: string | Union): Reference => {
+            if (typeof value === 'object') {
+               if (typeof inferReference === 'function') return inferReference(value)
+               return value
+            }
+            return {schema: relationship, id: value}
+         }
+
+         if (relationship) {
 
             /* Replace a property with a getter. When called
              * the getter will apply the next layer of getters
              * */
             Object.defineProperty(parsedEntity, property, {
                get() {
-                  const targetEntities = data[propertyRoot]
-
-                  if (!targetEntities) {
-                     console.warn(`The root ${propertyRoot} does not exist on the provided data set`)
-                     return value
-                  }
-
                   if (Array.isArray(value)) {
-                     return _.map(value, id => {
-                        const targetValue = targetEntities[id]
-                        if (targetValue) return applyGetters(propertyRoot)(targetValue)
-                        return id
+                     return _.map(value, (entityId) => {
+                        const {id, schema} = constructReference(entityId)
+
+                        const targetValue = data[schema][id]
+                        if (targetValue) return applyGetters(schema)(targetValue)
+                        return entityId
                      })
                   }
 
-                  if (targetEntities[value]) return applyGetters(propertyRoot)(targetEntities[value])
+                  const {id, schema} = constructReference(value)
+
+                  if (data[schema][id]) return applyGetters(schema)(data[schema][id])
                   return value
                }
             })
          } else {
-            if (typeof value === 'object') parsedEntity[property] = applyGetters(propertyRoot)(value)
+
+            /* If the entity property is an object, continue
+             * checking nested properties for any relationships.
+             * */
+            if (typeof value === 'object') parsedEntity[property] = applyGetters(root)(value)
          }
       })
 
       return parsedEntity
    }
 
-   if (only) {
-      if (Array.isArray(only)) {
-         const parsed = _.mapValues(_.pick(data, only), (entities, root) =>
+   /* If a limiter has been provided, only parse the
+    * roots present in the limiter and merge the
+    * remaining raw data alongside it.
+    * */
+   if (limiter) {
+      if (Array.isArray(limiter)) {
+         const parsed = _.mapValues(_.pick(data, limiter), (entities, root) =>
             _.mapValues(entities, applyGetters(root))
          )
 
@@ -94,10 +136,13 @@ export default (schema: Schema) => (data: Object, only: string | Array<string>) 
 
       return {
          ...data,
-         [only]: _.mapValues(data[only], applyGetters(only))
+         [limiter]: _.mapValues(data[limiter], applyGetters(limiter))
       }
    }
 
+   /* Parse the top level of all entities to replace
+    * all relationships with getters.
+    * */
    return _.mapValues(data, (entities, root) =>
       _.mapValues(entities, applyGetters(root))
    )

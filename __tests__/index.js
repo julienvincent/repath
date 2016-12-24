@@ -1,16 +1,16 @@
 import repath from '../src'
 
 const parse = repath({
-   users: {
-      __keys: ["user", "users", "author", "authors"]
+   schemas: {
+      users: {
+         __keys: ["user", "users", "author", "authors"]
+      },
+      books: {
+         __keys: ["book", "books"],
+         user: "awe"
+      }
    },
-   books: {
-      __keys: ["book", "books"],
-      user: "awe"
-   },
-   awe: {
-
-   }
+   unions: ["group"],
 })
 
 const parsed = parse({
@@ -20,7 +20,8 @@ const parsed = parse({
          book: 1,
          nested: {
             book: 1
-         }
+         },
+         group: {schema: "awe", id: 1}
       }
    },
    books: {
@@ -38,4 +39,4 @@ const parsed = parse({
    }
 })
 
-console.log(parsed)
+console.log(parsed.users[1])
