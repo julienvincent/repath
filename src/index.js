@@ -20,7 +20,7 @@ type Union = {
 
 type Reference = {
    id: string,
-   root: string
+   schema: string
 }
 
 export default (config: Config) => (data: Object, limiter: string | Array<string>) => {
@@ -72,18 +72,18 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
       _.forEach(entity, (value, property) => {
          const relationship = findRelationship(property, root)
 
-         /* Construct a reference from a value. This is used
-          * to properly understand union relationships.
-          * */
-         const constructReference = (value: string | Union): Reference => {
-            if (typeof value === 'object') {
-               if (typeof inferReference === 'function') return inferReference(value)
-               return value
-            }
-            return {schema: relationship, id: value}
-         }
-
          if (relationship) {
+
+            /* Construct a reference from a value. This is used
+             * to properly understand union relationships.
+             * */
+            const constructReference = (value: string | Union): Reference => {
+               if (typeof value === 'object') {
+                  if (typeof inferReference === 'function') return inferReference(value)
+                  return value
+               }
+               return {schema: relationship, id: value}
+            }
 
             /* Replace a property with a getter. When called
              * the getter will apply the next layer of getters
