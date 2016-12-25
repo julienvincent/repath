@@ -30,22 +30,22 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
     * it contains a relationship to another entity.
     * */
    const findRelationship = (property: string, currentRoot: string): ?string => {
-      let reference = null
 
       /* First check for overrides on the current
        * schema. The current schema is inferred
        * from the provided root.
        * */
-      _.forEach(schemas[currentRoot], (root, override) => {
-         if (override == property) reference = root
-      })
+      let reference = (schemas[currentRoot] || {})[property]
 
       /* Check to see if the property is a union. If
        * a match is found, return a pseudo root.
        * */
       if (!reference) {
          _.forEach(unions, union => {
-            if (union == property) reference = union
+            if (union == property) {
+               reference = union
+               return false
+            }
          })
       }
 
@@ -54,8 +54,10 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
             _.forEach(__keys, validKey => {
                if (validKey == property) {
                   reference = root
+                  return false
                }
             })
+            if (reference) return false
          })
       }
 
