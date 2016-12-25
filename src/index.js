@@ -36,6 +36,7 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
        * from the provided root.
        * */
       let reference = (schemas[currentRoot] || {})[property]
+      if (reference === null) return null
 
       /* Check to see if the property is a union. If
        * a match is found, return a pseudo root.

@@ -5,12 +5,13 @@ import _ from 'lodash'
 const join = repath({
    schemas: {
       users: {
-         __keys: ["owner", "friends"]
+         __keys: ["owner", "friends", "overrideWithNull"]
       },
 
       dogs: {
          __keys: ["dog", "noEntity", "noEntities"],
-         friends: "dogs"
+         friends: "dogs",
+         overrideWithNull: null
       },
 
       noRoot: {
@@ -58,6 +59,10 @@ test('Parsing a reference to a non existing entity should do nothing.', () => {
    expect(users[1].noEntities).toHaveLength(2)
    expect(users[1].noEntities).toContain(3)
    expect(users[1].noEntities).toContain(4)
+})
+
+test('Properties overridden with a "null" value should keep their initial value', () => {
+   expect(dogs[1].overrideWithNull).toBe(data.dogs[1].overrideWithNull)
 })
 
 test('Properties not defined in schema should remain unchanged', () => {

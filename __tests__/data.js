@@ -30,6 +30,9 @@ export default {
    dogs: {
       1: {
          name: "Dog A",
+
+         overrideWithNull: 1,
+
          owner: 1,
          friends: [2]
       },
