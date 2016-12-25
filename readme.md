@@ -89,7 +89,8 @@ config = {
       },
       rootB: {
          __keys: [],
-         b: "rootC" // instead of mapping b to rootA, map b to rootC
+         b: "rootC", // instead of mapping b to rootA, map b to rootC
+         a: null // specifying an override with value 'null' prevents any relationship mapping from occurring.
       },
       rootC: {
          ...
