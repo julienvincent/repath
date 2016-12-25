@@ -1,5 +1,5 @@
 // @flow
-import _ from 'lodash'
+import { forEach, mapValues, pick } from 'lodash'
 
 type Schemas = {
    [root: string]: {
@@ -41,7 +41,7 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
        * a match is found, return a pseudo root.
        * */
       if (!reference) {
-         _.forEach(unions, union => {
+         forEach(unions, union => {
             if (union == property) {
                reference = union
                return false
@@ -50,8 +50,8 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
       }
 
       if (!reference) {
-         _.forEach(schemas, ({__keys}, root: string) => {
-            _.forEach(__keys, validKey => {
+         forEach(schemas, ({__keys}, root: string) => {
+            forEach(__keys, validKey => {
                if (validKey == property) {
                   reference = root
                   return false
@@ -71,7 +71,7 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
    const applyGetters = (root: string) => (entity: Object) => {
       const parsedEntity = {...entity}
 
-      _.forEach(entity, (value, property) => {
+      forEach(entity, (value, property) => {
          const relationship = findRelationship(property, root)
 
          if (relationship) {
@@ -93,7 +93,7 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
             Object.defineProperty(parsedEntity, property, {
                get() {
                   if (Array.isArray(value)) {
-                     return _.map(value, (entityId) => {
+                     return value.map((entityId: string) => {
                         const {id, schema} = constructReference(entityId)
 
                         const targetEntities = data[schema]
@@ -128,8 +128,8 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
     * */
    if (limiter) {
       if (Array.isArray(limiter)) {
-         const parsed = _.mapValues(_.pick(data, limiter), (entities, root) =>
-            _.mapValues(entities, applyGetters(root))
+         const parsed = mapValues(pick(data, limiter), (entities, root) =>
+            mapValues(entities, applyGetters(root))
          )
 
          return {
@@ -140,14 +140,14 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
 
       return {
          ...data,
-         [limiter]: _.mapValues(data[limiter], applyGetters(limiter))
+         [limiter]: mapValues(data[limiter], applyGetters(limiter))
       }
    }
 
    /* Parse the top level of all entities to replace
     * all relationships with getters.
     * */
-   return _.mapValues(data, (entities, root) =>
-      _.mapValues(entities, applyGetters(root))
+   return mapValues(data, (entities, root) =>
+      mapValues(entities, applyGetters(root))
    )
 }
