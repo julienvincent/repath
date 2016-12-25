@@ -94,15 +94,16 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
                      return _.map(value, (entityId) => {
                         const {id, schema} = constructReference(entityId)
 
-                        const targetValue = data[schema][id]
-                        if (targetValue) return applyGetters(schema)(targetValue)
+                        const targetEntities = data[schema]
+                        if (targetEntities && targetEntities[id]) return applyGetters(schema)(targetEntities[id])
                         return entityId
                      })
                   }
 
                   const {id, schema} = constructReference(value)
+                  const targetEntities = data[schema]
 
-                  if (data[schema][id]) return applyGetters(schema)(data[schema][id])
+                  if (targetEntities && targetEntities[id]) return applyGetters(schema)(targetEntities[id])
                   return value
                }
             })
@@ -111,7 +112,8 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
             /* If the entity property is an object, continue
              * checking nested properties for any relationships.
              * */
-            if (typeof value === 'object') parsedEntity[property] = applyGetters(root)(value)
+            if (!Array.isArray(value) && typeof value === 'object')
+               parsedEntity[property] = applyGetters(root)(value)
          }
       })
 

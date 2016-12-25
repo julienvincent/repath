@@ -9,8 +9,12 @@ const join = repath({
       },
 
       dogs: {
-         __keys: ["dog"],
+         __keys: ["dog", "noEntity", "noEntities"],
          friends: "dogs"
+      },
+
+      noRoot: {
+         __keys: ["noRoot"]
       }
    }
 })
@@ -29,4 +33,35 @@ test('users[1].friends should contain an array of users', () => {
 test('dogs[1].friends should contain dogs[2] (override)', () => {
    expect(dogs[1].friends).toHaveLength(1)
    expect(dogs[1].friends[0]).toMatchObject(_.omit(dogs[2], ["owner"]))
+})
+
+test('Parsing only users should not add getters to other entities', () => {
+   const {users, dogs} = join(data, 'users')
+   expect(Object.getOwnPropertyDescriptor(users[1], "dog").get).toBeTruthy()
+   expect(dogs[1].owner).toBe(1)
+})
+
+test('Parsing only users and dogs should not add getters to other entities', () => {
+   const {users, dogs, cats} = join(data, ['users', 'dogs'])
+   expect(Object.getOwnPropertyDescriptor(users[1], "dog").get).toBeTruthy()
+   expect(Object.getOwnPropertyDescriptor(dogs[1], "owner").get).toBeTruthy()
+   expect(cats[1].owner).toBe(1)
+})
+
+test('Parsing a reference to a non existing root should do nothing.', () => {
+   expect(users[1].noRoot).toBe(1)
+})
+
+test('Parsing a reference to a non existing entity should do nothing.', () => {
+   expect(users[1].noEntity).toBe(3)
+
+   expect(users[1].noEntities).toHaveLength(2)
+   expect(users[1].noEntities).toContain(3)
+   expect(users[1].noEntities).toContain(4)
+})
+
+test('Properties not defined in schema should remain unchanged', () => {
+   expect(users[1].name).toBe(data.users[1].name)
+   expect(users[1].testArray).toBe(data.users[1].testArray)
+   expect(users[1].testObject).toMatchObject(data.users[1].testObject)
 })

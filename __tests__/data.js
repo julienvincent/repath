@@ -2,8 +2,15 @@ export default {
    users: {
       1: {
          name: "User A",
+
+         testArray: ["a", "b"],
+         testObject: {a: "a", b: "b"},
+
          dog: 1,
          friends: [2],
+         noRoot: 1,
+         noEntity: 3,
+         noEntities: [3, 4],
          animals: [
             {schema: "dogs", id: 1},
             {schema: "cats", id: 1}
