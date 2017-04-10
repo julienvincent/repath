@@ -53,5 +53,12 @@ export default {
 			name: "Cat B",
 			owner: 2
 		}
-	}
+	},
+
+	arrayInRoot: [
+		1, 2
+	],
+
+	stringInRoot: "1",
+	numberInRoot: 2
 }

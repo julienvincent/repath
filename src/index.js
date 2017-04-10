@@ -148,7 +148,11 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
 	/* Parse the top level of all entities to replace
 	 * all relationships with getters.
 	 * */
-	return mapValues(data, (entities, root) =>
-		mapValues(entities, applyGetters(root))
-	)
+	return mapValues(data, (entities, root) => {
+		if (typeof entities === 'object' && !Array.isArray(entities)) {
+			return mapValues(entities, applyGetters(root))
+		}
+
+		return entities
+	})
 }

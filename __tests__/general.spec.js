@@ -20,7 +20,7 @@ const join = repath({
 	}
 })
 
-const {users, dogs} = join(data)
+const {users, dogs, arrayInRoot, stringInRoot, numberInRoot} = join(data)
 
 test('users[1].dog should match dogs[1]', () => {
 	expect(users[1].dog).toMatchObject(_.omit(dogs[1], ["owner", "friends"]))
@@ -73,4 +73,13 @@ test('Properties not defined in schema should remain unchanged', () => {
 
 test('Null properties should not be changed', () => {
 	expect(users[1].nullValue).toBe(null)
+})
+
+test('Array type values in schema roots should not be touched', () => {
+	expect(arrayInRoot).toEqual([1, 2])
+})
+
+test('String or number type values in schema roots should not be touched', () => {
+	expect(stringInRoot).toBe("1")
+	expect(numberInRoot).toBe(2)
 })
