@@ -1,5 +1,5 @@
 // @flow
-import { forEach, mapValues, pick } from 'lodash'
+import { forEach, mapValues, pick, size } from 'lodash'
 
 type Schemas = {
 	[root: string]: {
@@ -22,6 +22,10 @@ type Reference = {
 	id: string,
 	schema: string
 }
+
+const isMappable = data => (
+	data && typeof data === 'object' && !Array.isArray(data) && size(data) > 0
+)
 
 export default (config: Config) => (data: Object, limiter: string | Array<string>) => {
 	const {schemas, unions, inferReference} = config
@@ -70,6 +74,7 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
 	 * replace the property with a getter.
 	 * */
 	const applyGetters = (root: string) => (entity: Object) => {
+		if (!isMappable(entity)) return entity
 		const parsedEntity = {...entity}
 
 		forEach(entity, (value, property) => {
@@ -106,8 +111,16 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
 						const {id, schema} = constructReference(value)
 						const targetEntities = data[schema]
 
-						if (targetEntities && targetEntities[id]) return applyGetters(schema)(targetEntities[id])
-						return value
+						const replaceAndReturn = (value: any) => {
+							Object.defineProperty(parsedEntity, property, {value})
+							return value
+						}
+
+						if (targetEntities && targetEntities[id]) {
+							return replaceAndReturn(applyGetters(schema)(targetEntities[id]))
+						}
+
+						return replaceAndReturn(value)
 					}
 				})
 			} else {
@@ -115,8 +128,7 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
 				/* If the entity property is an object, continue
 				 * checking nested properties for any relationships.
 				 * */
-				if (value && !Array.isArray(value) && typeof value === 'object')
-					parsedEntity[property] = applyGetters(root)(value)
+				parsedEntity[property] = applyGetters(root)(value)
 			}
 		})
 
@@ -149,7 +161,7 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
 	 * all relationships with getters.
 	 * */
 	return mapValues(data, (entities, root) => {
-		if (typeof entities === 'object' && !Array.isArray(entities)) {
+		if (isMappable(entities)) {
 			return mapValues(entities, applyGetters(root))
 		}
 

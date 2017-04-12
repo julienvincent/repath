@@ -20,7 +20,7 @@ const join = repath({
 	}
 })
 
-const {users, dogs, arrayInRoot, stringInRoot, numberInRoot} = join(data)
+const {users, dogs, ...parsedData} = join(data)
 
 test('users[1].dog should match dogs[1]', () => {
 	expect(users[1].dog).toMatchObject(_.omit(dogs[1], ["owner", "friends"]))
@@ -75,11 +75,19 @@ test('Null properties should not be changed', () => {
 	expect(users[1].nullValue).toBe(null)
 })
 
-test('Array type values in schema roots should not be touched', () => {
-	expect(arrayInRoot).toEqual([1, 2])
+test('Only object type data should be mapped and pathed', () => {
+	expect(parsedData.arrayInRoot).toEqual([1, 2])
+	expect(parsedData.stringInRoot).toBe("3")
+	expect(parsedData.numberInRoot).toBe(4)
+	expect(parsedData.nullData).toBe(null)
+
+	expect(parsedData.nestedData.a).toEqual([1, 2])
+	expect(parsedData.nestedData.b).toBe("3")
+	expect(parsedData.nestedData.c).toBe(4)
+	expect(parsedData.nestedData.d.a).toEqual([1, 2])
+	expect(parsedData.nestedData.e).toBe(null)
 })
 
-test('String or number type values in schema roots should not be touched', () => {
-	expect(stringInRoot).toBe("1")
-	expect(numberInRoot).toBe(2)
+test("Multiple calls to getters should return the same value", () => {
+	expect(users[1].dog).toEqual(users[1].dog)
 })

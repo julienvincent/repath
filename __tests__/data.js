@@ -59,6 +59,17 @@ export default {
 		1, 2
 	],
 
-	stringInRoot: "1",
-	numberInRoot: 2
+	stringInRoot: "3",
+	numberInRoot: 4,
+	nullData: null,
+
+	nestedData: {
+		a: [1, 2],
+		b: "3",
+		c: 4,
+		d: {
+			a: [1, 2]
+		},
+		e: null
+	}
 }
