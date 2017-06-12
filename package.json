@@ -1,6 +1,6 @@
 {
   "name": "repath",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A utility for repathing normalized data using JavaScript getters",
   "main": "lib/index.js",
   "repository": {
