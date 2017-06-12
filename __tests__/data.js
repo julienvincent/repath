@@ -35,6 +35,8 @@ export default {
 
 			overrideWithNull: 1,
 
+			nullReference: null,
+
 			owner: 1,
 			friends: [2]
 		},

@@ -5,7 +5,7 @@ import _ from 'lodash'
 const join = repath({
 	schemas: {
 		users: {
-			__keys: ["owner", "friends", "overrideWithNull"]
+			__keys: ["owner", "friends", "overrideWithNull", "nullReference"]
 		},
 
 		dogs: {
@@ -90,4 +90,8 @@ test('Only object type data should be mapped and pathed', () => {
 
 test("Multiple calls to getters should return the same value", () => {
 	expect(users[1].dog).toEqual(users[1].dog)
+})
+
+test("References with null values should not attempt to resolve", () => {
+	expect(dogs[1].nullReference).toEqual(null)
 })

@@ -98,6 +98,8 @@ export default (config: Config) => (data: Object, limiter: string | Array<string
 				 * */
 				Object.defineProperty(parsedEntity, property, {
 					get() {
+						if (value === null) return value
+
 						if (Array.isArray(value)) {
 							return value.map((entityId: string) => {
 								const {id, schema} = constructReference(entityId)
